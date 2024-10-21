@@ -23,6 +23,7 @@ export default function AppSelect({
 	placeholder,
 	name,
 	label,
+	defaultValue,
 	...props
 }: AppSelectProps) {
 	return (
@@ -32,7 +33,7 @@ export default function AppSelect({
 					{label}
 				</label>
 			)}
-			<Select name={name}>
+			<Select name={name} defaultValue={String(defaultValue)}>
 				<SelectTrigger
 					className={`w-[180px] sm:min-w-full ${className}`}
 					{...props}
@@ -42,7 +43,7 @@ export default function AppSelect({
 				</SelectTrigger>
 				<SelectContent>
 					{options.map((value) => (
-						<SelectItem key={value} value={value}>
+						<SelectItem key={value} value={value.toLowerCase()}>
 							{value}
 						</SelectItem>
 					))}

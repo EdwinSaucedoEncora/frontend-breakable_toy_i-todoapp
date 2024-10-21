@@ -34,7 +34,7 @@ export function TasksDataTable({ table }: { table: TableT<Task> }) {
 	const columns = table.getAllColumns().length;
 
 	return (
-		<div className="rounded-md border">
+		<div className="rounded-md border h-auto">
 			<Table>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
@@ -57,14 +57,14 @@ export function TasksDataTable({ table }: { table: TableT<Task> }) {
 				<TableBody>
 					{table.getRowModel().rows?.length ? (
 						table.getRowModel().rows.map((row) => {
-							const { dueDate, status } = row.original as Task;
+							const { dueDate, doneDate } = row.original as Task;
 							return (
 								<TableRow
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
 									className={getRowColor({
 										dueDate,
-										status,
+										status: doneDate ? "done" : "undone",
 									})}
 								>
 									{row.getVisibleCells().map((cell) => (
