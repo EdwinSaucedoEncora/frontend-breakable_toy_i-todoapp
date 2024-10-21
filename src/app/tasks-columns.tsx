@@ -32,11 +32,11 @@ import { TaskModal } from "./components";
 export type Task = {
 	id: string;
 	name: string;
-	status: "done" | "undone";
+	doneDate: string;
 	priority: "high" | "medium" | "low";
-	dueDate?: Date | string;
-	createdAt: Date | string;
-	updatedAt: Date | string;
+	dueDate?: string;
+	createdAt: string;
+	updatedAt: string;
 };
 
 export const taskColumns: ColumnDef<Task>[] = [

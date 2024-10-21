@@ -6,31 +6,32 @@ import { Input } from "@/components/ui/input";
 import {
 	Pagination,
 	PaginationContent,
-	PaginationEllipsis,
 	PaginationItem,
-	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import http from "../http-common";
 import { TaskModal } from "./components";
 import {
 	PRIORITY_PLACEHOLDER,
 	PRIORITY_TASKS,
 	STATUS_PLACEHOLDER,
 	STATUS_TASKS,
-	TASKS_SAMPLE,
 } from "./constants";
-import { taskColumns } from "./tasks-columns";
+import { Task, taskColumns } from "./tasks-columns";
 import { TasksDataTable } from "./tasks-data-table";
 
 export default function Home() {
-	// const table:{
-	// 	columns,
-	// 	data,
-	// }: DataTableProps<TData, TValue>
+	const [data, setData] = useState({ tasks: [], total: 0 });
+	const [page, setPage] = useState<number>(Math.ceil(data.total / 10) + 1);
+	const searchParams = useSearchParams();
+	const { replace } = useRouter();
+	const pathname = usePathname();
 	const table = useReactTable({
-		data: TASKS_SAMPLE,
+		data: data.tasks,
 		columns: taskColumns,
 		meta: {
 			a: 1,
@@ -38,12 +39,91 @@ export default function Home() {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
+	const a = (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const target: any | unknown = e.target;
+		const name = target.name.value;
+		const priority = target.priorities.value;
+		const status = target.statuses.value;
+
+		const filterParams = new URLSearchParams();
+
+		if (name) {
+			filterParams.append("name", name);
+		}
+		if (priority) {
+			filterParams.append("priority", priority);
+		}
+		if (status) {
+			filterParams.append("status", status);
+		}
+		replace(`${pathname}?${filterParams.toString().toLowerCase()}`);
+	};
+
+	const nextPageURL = useCallback(() => {
+		const paginationSearchParams = new URLSearchParams();
+
+		const status = searchParams.get("status");
+		const name = searchParams.get("name");
+		const priority = searchParams.get("priority");
+
+		if (name) {
+			paginationSearchParams.append("name", name);
+		}
+		if (priority) {
+			paginationSearchParams.append("priority", priority);
+		}
+		if (status) {
+			paginationSearchParams.append("status", status);
+		}
+
+		paginationSearchParams.append("page", `${page + 1}`);
+		return `${pathname}?${paginationSearchParams.toString()}`;
+	}, [page]);
+
+	const prevPageURL = useCallback(() => {
+		const paginationSearchParams = new URLSearchParams();
+
+		const status = searchParams.get("status");
+		const name = searchParams.get("name");
+		const priority = searchParams.get("priority");
+
+		if (name) {
+			paginationSearchParams.append("name", name);
+		}
+		if (priority) {
+			paginationSearchParams.append("priority", priority);
+		}
+		if (status) {
+			paginationSearchParams.append("status", status);
+		}
+
+		paginationSearchParams.append("page", `${page + 1}`);
+		return `${pathname}?${paginationSearchParams.toString()}`;
+	}, [page]);
+
+	const isNextPage = (page + 1) * 10 < data.total;
+
+	useEffect(() => {
+		let getAllFetchURL = "/todos";
+		if (searchParams.toString()) {
+			getAllFetchURL = getAllFetchURL.concat("?", searchParams.toString());
+		}
+		http.get(getAllFetchURL).then((res) => {
+			setData(res.data);
+		});
+	}, [searchParams]);
+
 	return (
 		<main className="flex flex-col gap-8 row-start-2 sm:items-start  font-[family-name:var(--font-geist-sans)]">
 			{/* Using a responsive container for limiting to expand on large screens */}
 			<ResponsiveContainer className="max-w-maximum-screens p-4  space-y-4 *:px-8">
 				{/* Top container for search */}
-				<div className="flex flex-wrap justify-between  w-full sm:[&_:is(input,button,div)]:w-full border py-8 rounded-lg ">
+				<form
+					className="flex flex-wrap justify-between  w-full sm:[&_:is(input,button,div)]:w-full border py-8 rounded-lg "
+					onSubmit={a}
+				>
 					<div className="min-w-full flex place-items-center sm:flex-col sm:place-items-start sm:gap-2">
 						<label htmlFor="name" className="max-w-[4rem] min-w-[4rem] px-2">
 							Name
@@ -71,27 +151,29 @@ export default function Home() {
 						/>
 					</div>
 					<Button className="m-8 w-32 self-end">Search</Button>
-				</div>
+				</form>
 				{/* Tasks table list section */}
-				<div className="h-[50dvh] ">
+				<div className="h-auto ">
 					{/* Content Table */}
 					<div className="h-[90%] ">
 						<TaskModal />
 						<TasksDataTable table={table} />
 					</div>
-					<Pagination className="h-[10%]">
-						<PaginationContent>
+					<Pagination className="h-auto py-8">
+						<PaginationContent className="space-x-8">
 							<PaginationItem>
-								<PaginationPrevious href="#" />
+								<PaginationPrevious
+									href={prevPageURL()}
+									onClick={() => setPage(page - 1)}
+									replace
+								/>
 							</PaginationItem>
 							<PaginationItem>
-								<PaginationLink href="#">1</PaginationLink>
-							</PaginationItem>
-							<PaginationItem>
-								<PaginationEllipsis />
-							</PaginationItem>
-							<PaginationItem>
-								<PaginationNext href="#" />
+								<PaginationNext
+									href={nextPageURL()}
+									onClick={() => setPage(page + 1)}
+									replace
+								/>
 							</PaginationItem>
 						</PaginationContent>
 					</Pagination>
