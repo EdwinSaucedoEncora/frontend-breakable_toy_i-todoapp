@@ -21,7 +21,7 @@ import {
 	STATUS_PLACEHOLDER,
 	STATUS_TASKS,
 } from "./constants";
-import { Task, taskColumns } from "./tasks-columns";
+import { taskColumns } from "./tasks-columns";
 import { TasksDataTable } from "./tasks-data-table";
 
 export default function Home() {
@@ -38,8 +38,13 @@ export default function Home() {
 		},
 		getCoreRowModel: getCoreRowModel(),
 	});
+	const [activity, setActivity] = useState(false);
 
-	const a = (e: FormEvent<HTMLFormElement>) => {
+	const handleActivity = () => {
+		setActivity(!activity);
+	};
+
+	const search = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const target: any | unknown = e.target;
@@ -113,16 +118,22 @@ export default function Home() {
 		http.get(getAllFetchURL).then((res) => {
 			setData(res.data);
 		});
-	}, [searchParams]);
+	}, [searchParams, activity]);
 
 	return (
-		<main className="flex flex-col gap-8 row-start-2 sm:items-start  font-[family-name:var(--font-geist-sans)]">
+		<main
+			className="flex flex-col gap-8 row-start-2 sm:items-start  font-[family-name:var(--font-geist-sans)]"
+			onClick={handleActivity}
+			onChange={handleActivity}
+			onSubmit={handleActivity}
+			onBlur={handleActivity}
+		>
 			{/* Using a responsive container for limiting to expand on large screens */}
 			<ResponsiveContainer className="max-w-maximum-screens p-4  space-y-4 *:px-8">
 				{/* Top container for search */}
 				<form
 					className="flex flex-wrap justify-between  w-full sm:[&_:is(input,button,div)]:w-full border py-8 rounded-lg "
-					onSubmit={a}
+					onSubmit={search}
 				>
 					<div className="min-w-full flex place-items-center sm:flex-col sm:place-items-start sm:gap-2">
 						<label htmlFor="name" className="max-w-[4rem] min-w-[4rem] px-2">
