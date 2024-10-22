@@ -28,6 +28,8 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { TaskModal } from "./components";
+import { deleteTask, doneTask, undoneTask } from "./actions";
+import { useRouter } from "next/navigation";
 
 export type Task = {
 	id: string;
@@ -41,11 +43,22 @@ export type Task = {
 
 export const taskColumns: ColumnDef<Task>[] = [
 	{
-		accessorKey: "status",
+		accessorKey: "doneDate",
 		header: () => <Checkbox />,
 		cell: (data) => {
-			const isDone = data.getValue() === "done";
-			return <Checkbox checked={isDone} />;
+			const isDone = Boolean(data.getValue());
+			return (
+				<Checkbox
+					defaultChecked={isDone}
+					onCheckedChange={async (e) => {
+						if (isDone) {
+							await undoneTask(data.row.original.id);
+						} else {
+							await doneTask(data.row.original.id);
+						}
+					}}
+				/>
+			);
 		},
 	},
 	{
@@ -103,7 +116,13 @@ export const taskColumns: ColumnDef<Task>[] = [
 								</AlertDialogHeader>
 								<AlertDialogFooter>
 									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction>Continue</AlertDialogAction>
+									<AlertDialogAction
+										onClickCapture={async () =>
+											await deleteTask(data.row.original.id)
+										}
+									>
+										Continue
+									</AlertDialogAction>
 								</AlertDialogFooter>
 							</AlertDialogContent>
 						</AlertDialog>
