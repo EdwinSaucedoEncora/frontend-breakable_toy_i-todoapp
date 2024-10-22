@@ -16,6 +16,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import http from "../http-common";
 import { TaskModal } from "./components";
 import {
+	Metrics,
 	PRIORITY_PLACEHOLDER,
 	PRIORITY_TASKS,
 	STATUS_PLACEHOLDER,
@@ -27,6 +28,12 @@ import { TasksDataTable } from "./tasks-data-table";
 export default function Home() {
 	const [data, setData] = useState({ tasks: [], total: 0 });
 	const [page, setPage] = useState<number>(Math.ceil(data.total / 10) + 1);
+	const [metrics, setMetrics] = useState<Metrics>({
+		highAverage: 0,
+		mediumAverage: 0,
+		lowAverage: 0,
+		totalAverage: 0,
+	});
 	const searchParams = useSearchParams();
 	const { replace } = useRouter();
 	const pathname = usePathname();
@@ -108,8 +115,6 @@ export default function Home() {
 		return `${pathname}?${paginationSearchParams.toString()}`;
 	}, [page]);
 
-	const isNextPage = (page + 1) * 10 < data.total;
-
 	useEffect(() => {
 		let getAllFetchURL = "/todos";
 		if (searchParams.toString()) {
@@ -117,6 +122,10 @@ export default function Home() {
 		}
 		http.get(getAllFetchURL).then((res) => {
 			setData(res.data);
+		});
+
+		http.get("/todos/metrics").then((res) => {
+			setMetrics(res.data);
 		});
 	}, [searchParams, activity]);
 
@@ -189,6 +198,31 @@ export default function Home() {
 						</PaginationContent>
 					</Pagination>
 				</div>
+				{/* Metrics section */}
+				{metrics && (
+					<div className="w-full h-32 border rounded-lg flex *:grow">
+						<div className="flex flex-col *:grow">
+							<div className="flex gap-4">
+								<p className="font-bold">High priority</p>
+								<p>{metrics.highAverage?.toFixed(2)}&nbsp;days</p>
+							</div>
+							<div className="flex gap-4">
+								<p className="font-bold">Medium priority</p>
+								<p>{metrics.mediumAverage?.toFixed(2)}&nbsp;days</p>
+							</div>
+							<div className="flex gap-4">
+								<p className="font-bold">Low priority</p>
+								<p>{metrics.lowAverage?.toFixed(2)}&nbsp;days</p>
+							</div>
+						</div>
+						<div className="flex flex-col *:grow">
+							<div className="flex gap-4">
+								<p className="font-bold">Total tasks</p>
+								<p>{metrics.totalAverage?.toFixed(2)}&nbsp;days</p>
+							</div>
+						</div>
+					</div>
+				)}
 			</ResponsiveContainer>
 		</main>
 	);
