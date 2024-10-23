@@ -96,7 +96,7 @@ export function TaskModal({
 						</div>
 					</div>
 					<DialogFooter>
-						<Close>
+						<Close asChild>
 							<Button type="submit">Apply</Button>
 						</Close>
 					</DialogFooter>
