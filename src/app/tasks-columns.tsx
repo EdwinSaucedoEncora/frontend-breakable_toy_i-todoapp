@@ -1,21 +1,5 @@
 "use client";
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { ColumnDef } from "@tanstack/react-table";
-import { capitalize } from "./utils";
-import {
-	Cross2Icon,
-	DotsVerticalIcon,
-	Pencil1Icon,
-} from "@radix-ui/react-icons";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -27,9 +11,23 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { TaskModal } from "./components";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+	Cross2Icon,
+	DotsVerticalIcon,
+	Pencil1Icon,
+} from "@radix-ui/react-icons";
+import { ColumnDef } from "@tanstack/react-table";
 import { deleteTask, doneTask, undoneTask } from "./actions";
-import { useRouter } from "next/navigation";
+import { TaskModal } from "./components";
+import { capitalize } from "./utils";
 
 export type Task = {
 	id: string;
@@ -44,13 +42,14 @@ export type Task = {
 export const taskColumns: ColumnDef<Task>[] = [
 	{
 		accessorKey: "doneDate",
-		header: () => <Checkbox />,
+		enableSorting: false,
+		header: () => <Checkbox checked />,
 		cell: (data) => {
 			const isDone = Boolean(data.getValue());
 			return (
 				<Checkbox
 					defaultChecked={isDone}
-					onCheckedChange={async (e) => {
+					onCheckedChange={async () => {
 						if (isDone) {
 							await undoneTask(data.row.original.id);
 						} else {
@@ -64,20 +63,26 @@ export const taskColumns: ColumnDef<Task>[] = [
 	{
 		accessorKey: "name",
 		header: "Name",
+		enableSorting: true,
 	},
 	{
 		accessorKey: "priority",
 		header: "Priority",
+		sortDescFirst: true,
+		enableSorting: true,
 		// Return capitalize word
 		cell: (data) => capitalize(data.getValue() as string),
 	},
 	{
 		accessorKey: "dueDate",
 		header: "Due Date",
+		sortDescFirst: false,
+		enableSorting: true,
 		cell: (data) => data?.getValue() ?? "-",
 	},
 	{
 		accessorKey: "actions",
+		enableSorting: false,
 		header: "\b",
 		cell: (data) => {
 			return (

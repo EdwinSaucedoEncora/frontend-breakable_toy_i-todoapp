@@ -10,7 +10,12 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
-import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import {
+	getCoreRowModel,
+	getSortedRowModel,
+	SortingState,
+	useReactTable,
+} from "@tanstack/react-table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import http from "../http-common";
@@ -28,6 +33,7 @@ import { TasksDataTable } from "./tasks-data-table";
 export default function Home() {
 	const [data, setData] = useState({ tasks: [], total: 0 });
 	const [page, setPage] = useState<number>(Math.ceil(data.total / 10) + 1);
+	const [sorting, setSorting] = useState<SortingState>([]);
 	const [metrics, setMetrics] = useState<Metrics>({
 		highAverage: 0,
 		mediumAverage: 0,
@@ -43,7 +49,21 @@ export default function Home() {
 		meta: {
 			a: 1,
 		},
+		state: {
+			sorting,
+		},
+		getSortedRowModel: getSortedRowModel(),
+		enableSorting: true,
 		getCoreRowModel: getCoreRowModel(),
+		onSortingChange: setSorting,
+		initialState: {
+			sorting: [
+				{
+					id: "name",
+					desc: false,
+				},
+			],
+		},
 	});
 	const [activity, setActivity] = useState(false);
 
@@ -113,12 +133,18 @@ export default function Home() {
 
 		paginationSearchParams.append("page", `${page + 1}`);
 		return `${pathname}?${paginationSearchParams.toString()}`;
-	}, [page]);
+	}, [searchParams, pathname, page]);
 
 	useEffect(() => {
+		const sortedBy = sorting.at(0)?.id;
 		let getAllFetchURL = "/todos";
 		if (searchParams.toString()) {
 			getAllFetchURL = getAllFetchURL.concat("?", searchParams.toString());
+			if (sortedBy) {
+				getAllFetchURL = getAllFetchURL.concat("&", "sort=", sortedBy);
+			}
+		} else if (sortedBy) {
+			getAllFetchURL = getAllFetchURL.concat("?", "sort=", sortedBy);
 		}
 		http.get(getAllFetchURL).then((res) => {
 			setData(res.data);
@@ -127,7 +153,7 @@ export default function Home() {
 		http.get("/todos/metrics").then((res) => {
 			setMetrics(res.data);
 		});
-	}, [searchParams, activity]);
+	}, [searchParams, activity, sorting]);
 
 	return (
 		<main
